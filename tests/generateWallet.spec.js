@@ -59,4 +59,15 @@ describe('Generate wallet', () => {
         );
         assert.equal(addressFromPublicKey(keyPair.publicKey), '0x76ecd7d5c44415dc184ee768ce4ffb89bd35a669');
     });
+
+    it('should generate another address', async () => {
+        const mnemonic = 'tick tack toe';
+        const path = "m/16/56'/0";
+        const keyPair = keyPairFromMnemonicAndPath(mnemonic, path);
+
+        assert.equal(keyPair.privateKey.toString('hex'),
+            '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
+        );
+        assert.equal(addressFromPublicKey(keyPair.publicKey), '0xab98b0bf2c8d453e7a4880ab41af0e9095085641');
+    });
 });
