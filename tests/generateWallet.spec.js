@@ -1,15 +1,9 @@
 const {describe, it} = require('mocha');
 const {assert} = require('chai');
 const EC = require('elliptic').ec;
-const {keyPairFromMnemonicAndPath, addressFromPublicKey} = require('../generateWallet');
+const {keyPairFromMnemonicAndPath, addressFromPublicKey} = require('../utils');
 
 const ec = new EC('secp256k1');
-
-const sleep = (delay) => {
-    return new Promise(resolve => {
-        setTimeout(() => resolve(), delay);
-    });
-};
 
 describe('Generate wallet', () => {
     before(async function() {
