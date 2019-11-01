@@ -1,4 +1,4 @@
-const {questionAsync, addressFromPublicKey, keyPairFromMnemonicAndPath, readPath, formVariants} = require('./utils');
+const {questionAsync, ethAddressFromPublicKey, keyPairFromMnemonicAndPath, readPath, formVariants} = require('./utils');
 
 /*
  * This file should help you to recover your PK if you still memember
@@ -32,8 +32,8 @@ async function main() {
             const strMnemonicCandidate = variant.slice(0, i).map(idx => arrWords[idx]).join(' ');
             console.log(`Trying ${strMnemonicCandidate}`);
             const keyPair = keyPairFromMnemonicAndPath(strMnemonicCandidate, path);
-            if (strAddrToSearch === addressFromPublicKey(keyPair.publicKey)) {
-                return [addressFromPublicKey(keyPair.publicKey), keyPair.privateKey.toString('hex')];
+            if (strAddrToSearch === ethAddressFromPublicKey(keyPair.publicKey)) {
+                return [ethAddressFromPublicKey(keyPair.publicKey), keyPair.privateKey.toString('hex')];
             }
         }
     }

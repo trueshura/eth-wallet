@@ -2,16 +2,23 @@ const readline = require('readline');
 const bip39 = require('bip39');
 const bip32 = require('bip32');
 const sha3 = require('js-sha3');
+const crypto = require('crypto');
+const Base58 = require('base-58');
+
+const createHash = crypto.createHash;
 
 const defaultPath = '0/0/0';
 
 module.exports = {
     questionAsync,
-    addressFromPublicKey,
+    ethAddressFromPublicKey,
+    btcAddressFromPublicKey,
     keyPairFromMnemonicAndPath,
     readPath,
     formVariants,
-    arrWithoutElement
+    arrWithoutElement,
+    hash160,
+    sha256
 };
 
 function questionAsync(prompt) {
@@ -43,7 +50,7 @@ async function readPath() {
     return `m/${resp}`;
 }
 
-function addressFromPublicKey(buffPubKey) {
+function ethAddressFromPublicKey(buffPubKey) {
     let pubKey = buffPubKey;
 
     // prefixed key: https://en.bitcoin.it/wiki/Elliptic_Curve_Digital_Signature_Algorithm
@@ -52,6 +59,13 @@ function addressFromPublicKey(buffPubKey) {
     }
     const hash = sha3.keccak256(pubKey);
     return `0x${hash.substring(24)}`;
+}
+
+function btcAddressFromPublicKey(pubKey) {
+    const hash = hash160(pubKey);
+    const mainnetHash = `00${hash}`;
+    const checksum = sha256(sha256(`${mainnetHash}`)).substring(0, 8);
+    return Base58.encode(Buffer.from(`${mainnetHash}${checksum}`, 'hex'));
 }
 
 /**
@@ -89,4 +103,19 @@ function range(length) {
         arrRetVal[i] = i;
     }
     return arrRetVal;
+}
+
+function hash160(buffer) {
+    buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'hex');
+    return ripemd160(sha256(buffer));
+}
+
+function ripemd160(buffer) {
+    buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'hex');
+    return createHash('rmd160').update(buffer).digest().toString('hex');
+}
+
+function sha256(buffer) {
+    buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'hex');
+    return createHash('sha256').update(buffer).digest().toString('hex');
 }

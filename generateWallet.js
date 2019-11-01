@@ -1,4 +1,10 @@
-const {questionAsync, addressFromPublicKey, keyPairFromMnemonicAndPath, readPath} = require('./utils');
+const {
+    questionAsync,
+    ethAddressFromPublicKey,
+    btcAddressFromPublicKey,
+    keyPairFromMnemonicAndPath,
+    readPath
+} = require('./utils');
 
 async function main() {
     const mnemonic = await readMnemonic();
@@ -6,7 +12,11 @@ async function main() {
     const path = await readPath();
     console.log(`Derivation path: "${path}"`);
     const keyPair = keyPairFromMnemonicAndPath(mnemonic, path);
-    return [addressFromPublicKey(keyPair.publicKey), keyPair.privateKey.toString('hex')];
+    return {
+        ethAddress: ethAddressFromPublicKey(keyPair.publicKey),
+        btcAddress: btcAddressFromPublicKey(keyPair.publicKey),
+        privateKey: keyPair.privateKey.toString('hex')
+    };
 }
 
 async function readMnemonic() {
@@ -14,8 +24,9 @@ async function readMnemonic() {
 }
 
 main()
-    .then(([address, privateKey]) => {
-        console.log(`Your address: "${address}"`);
+    .then(({ethAddress, btcAddress, privateKey}) => {
+        console.log(`Your ETH address: "${ethAddress}"`);
+        console.log(`Your BTC address: "${btcAddress}"`);
         console.log(`Your privateKey (keep it secret!!): "${privateKey}"`);
         process.exit(0);
     })

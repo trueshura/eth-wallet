@@ -1,7 +1,8 @@
 {
   "name": "eth-wallet",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "dependencies": {
+    "base-58": "0.0.1",
     "bip32": "^1.0.2",
     "bip39": "^2.5.0",
     "js-sha3": "^0.8.0"
