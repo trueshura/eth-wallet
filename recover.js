@@ -1,9 +1,16 @@
-const {questionAsync, ethAddressFromPublicKey, keyPairFromMnemonicAndPath, readPath, formVariants} = require('./utils');
+const {
+    questionAsync,
+    ethAddressFromPublicKey,
+    keyPairFromMnemonicAndPath,
+    readPath,
+    formVariants
+} = require('./utils');
 
 /*
- * This file should help you to recover your PK if you still memember
+ * This file should help you to recover your PK if you still rememember
  * 1. address (TODO: get rid of it, by checking balance of every address in process)
  * 2. parts of mnemonics
+ * 3. path
  */
 
 main()
@@ -28,12 +35,13 @@ async function main() {
     for (let variant of arrVariants) {
 
         // try all length
-        for (let i = 1; i < variant.length; i++) {
+        for (let i = 1; i <= variant.length; i++) {
             const strMnemonicCandidate = variant.slice(0, i).map(idx => arrWords[idx]).join(' ');
-            console.log(`Trying ${strMnemonicCandidate}`);
             const keyPair = keyPairFromMnemonicAndPath(strMnemonicCandidate, path);
-            if (strAddrToSearch === ethAddressFromPublicKey(keyPair.publicKey)) {
-                return [ethAddressFromPublicKey(keyPair.publicKey), keyPair.privateKey.toString('hex')];
+            const addr = ethAddressFromPublicKey(keyPair.publicKey);
+            console.log(`Trying ${strMnemonicCandidate}  (${addr})`);
+            if (strAddrToSearch === addr) {
+                return [addr, keyPair.privateKey.toString('hex')];
             }
         }
     }
