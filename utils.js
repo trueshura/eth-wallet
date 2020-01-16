@@ -1,11 +1,16 @@
 const readline = require('readline');
+const crypto = require('crypto');
+
 const bip39 = require('bip39');
 const bip32 = require('bip32');
 const sha3 = require('js-sha3');
-const crypto = require('crypto');
 const Base58 = require('base-58');
+const elliptic = require('elliptic');
 
 const createHash = crypto.createHash;
+
+const EC = elliptic.ec;
+const ec = new EC('secp256k1');
 
 const defaultPath = '0/0/0';
 
@@ -18,7 +23,10 @@ module.exports = {
     formVariants,
     arrWithoutElement,
     hash160,
-    sha256
+    sha256,
+
+    keyPairFromPrivate,
+    getPublic
 };
 
 function questionAsync(prompt) {
@@ -118,4 +126,12 @@ function ripemd160(buffer) {
 function sha256(buffer) {
     buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'hex');
     return createHash('sha256').update(buffer).digest().toString('hex');
+}
+
+function keyPairFromPrivate(privateKey, enc = 'hex') {
+    return ec.keyPair({priv: privateKey, privEnc: enc});
+}
+
+function getPublic(keypair, compact = true, encoding = 'hex') {
+    return keypair.getPublic(compact, encoding);
 }
