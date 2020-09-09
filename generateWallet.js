@@ -3,7 +3,8 @@ const {
     ethAddressFromPublicKey,
     btcAddressFromPublicKey,
     keyPairFromMnemonicAndPath,
-    readPath
+    readPath,
+    wifFromPk
 } = require('./utils');
 
 async function main() {
@@ -15,7 +16,8 @@ async function main() {
     return {
         ethAddress: ethAddressFromPublicKey(keyPair.publicKey),
         btcAddress: btcAddressFromPublicKey(keyPair.publicKey),
-        privateKey: keyPair.privateKey.toString('hex')
+        privateKey: keyPair.privateKey.toString('hex'),
+        WIF: wifFromPk(keyPair.privateKey.toString('hex'))
     };
 }
 
@@ -24,10 +26,11 @@ async function readMnemonic() {
 }
 
 main()
-    .then(({ethAddress, btcAddress, privateKey}) => {
+    .then(({ethAddress, btcAddress, privateKey, WIF}) => {
         console.log(`Your ETH address: "${ethAddress}"`);
         console.log(`Your BTC address: "${btcAddress}"`);
         console.log(`Your privateKey (keep it secret!!): "${privateKey}"`);
+        console.log(`WIF (Bitcoin PK!): "${WIF}"`);
         process.exit(0);
     })
     .catch(err => {

@@ -1,11 +1,13 @@
 const {describe, it} = require('mocha');
 const {assert} = require('chai');
 const EC = require('elliptic').ec;
-const {keyPairFromMnemonicAndPath, ethAddressFromPublicKey, btcAddressFromPublicKey, hash160} = require('../utils');
+const {keyPairFromMnemonicAndPath, ethAddressFromPublicKey, btcAddressFromPublicKey, hash160, wifFromPk} = require(
+    '../utils');
+const recover = require('../recover');
 
 const ec = new EC('secp256k1');
 
-describe('Generate wallet', () => {
+describe('Tests', () => {
     before(async function() {
         this.timeout(15000);
     });
@@ -96,6 +98,29 @@ describe('Generate wallet', () => {
                 '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
             );
             assert.equal(btcAddressFromPublicKey(keyPair.publicKey), '1D4FJkUMzhR1JY8W6RAXRpkwv2nLXBGZss');
+        });
+    });
+
+    describe('Bitcoin WIF', async () => {
+        it('should generate WIF', async () => {
+            // see https://en.bitcoin.it/wiki/Wallet_import_format
+
+            const pk = '0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D';
+            const WIF = '5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ';
+            assert.strictEqual(wifFromPk(pk), WIF);
+        });
+    });
+
+    describe('Mnemonic recovery', async () => {
+        it('should recover', async () => {
+            const strMnemonicParts = "1 2 3 4";
+            const strExpectedMnemonic = "3 2 1";
+            const strPath = "0/0/0";
+            const strKnownAddress = '0x3608bc66d4689cad940fcdb63d85d8bee4c7c071';
+
+            const [, , result] = recover(strMnemonicParts, strPath, strKnownAddress, 3);
+
+            assert.strictEqual(result, strExpectedMnemonic);
         });
     });
 });

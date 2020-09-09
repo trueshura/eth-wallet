@@ -12,12 +12,15 @@ const createHash = crypto.createHash;
 const EC = elliptic.ec;
 const ec = new EC('secp256k1');
 
+const base58 = require('./base58');
+
 const defaultPath = '0/0/0';
 
 module.exports = {
     questionAsync,
     ethAddressFromPublicKey,
     btcAddressFromPublicKey,
+    wifFromPk,
     keyPairFromMnemonicAndPath,
     readPath,
     formVariants,
@@ -74,6 +77,12 @@ function btcAddressFromPublicKey(pubKey) {
     const mainnetHash = `00${hash}`;
     const checksum = sha256(sha256(`${mainnetHash}`)).substring(0, 8);
     return Base58.encode(Buffer.from(`${mainnetHash}${checksum}`, 'hex'));
+}
+
+function wifFromPk(privateKey) {
+    const mainNet = '80' + privateKey.toUpperCase();
+    const stage2 = sha256(sha256(mainNet)).toUpperCase();
+    return base58.encode(Buffer.from(mainNet + stage2.substr(0, 8), 'hex'));
 }
 
 /**
