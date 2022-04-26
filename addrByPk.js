@@ -2,6 +2,7 @@ const {
     questionAsync,
     ethAddressFromPublicKey,
     btcAddressFromPublicKey,
+    ubxAddressFromPublicKey,
     keyPairFromPrivate,
     getPublic
 } = require('./utils');
@@ -11,15 +12,17 @@ async function main() {
     const keyPair = keyPairFromPrivate(strPk);
 
     return {
-        ethAddress: ethAddressFromPublicKey(getPublic(keyPair, 'bin')),
-        btcAddress: btcAddressFromPublicKey(getPublic(keyPair, false))
+        ethAddress: ethAddressFromPublicKey(getPublic(keyPair, false, 'bin')),
+        btcAddress: btcAddressFromPublicKey(getPublic(keyPair, false)),
+        ubxAddress: ubxAddressFromPublicKey(getPublic(keyPair, true)),
     };
 }
 
 main()
-    .then(({ethAddress, btcAddress, privateKey}) => {
+    .then(({ethAddress, btcAddress, ubxAddress, privateKey}) => {
         console.log(`Your ETH address: "${ethAddress}"`);
         console.log(`Your BTC address: "${btcAddress}"`);
+        console.log(`Your UBX address: "${ubxAddress}"`);
         process.exit(0);
     })
     .catch(err => {

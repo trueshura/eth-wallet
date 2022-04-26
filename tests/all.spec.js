@@ -1,7 +1,9 @@
 const {describe, it} = require('mocha');
 const {assert} = require('chai');
 const EC = require('elliptic').ec;
-const {keyPairFromMnemonicAndPath, ethAddressFromPublicKey, btcAddressFromPublicKey, hash160, wifFromPk} = require(
+const {keyPairFromMnemonicAndPath, ethAddressFromPublicKey, btcAddressFromPublicKey, hash160, wifFromPk,
+    ubxAddressFromPublicKey
+} = require(
     '../utils');
 const recover = require('../recover');
 
@@ -98,6 +100,18 @@ describe('Tests', () => {
                 '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
             );
             assert.equal(btcAddressFromPublicKey(keyPair.publicKey), '1D4FJkUMzhR1JY8W6RAXRpkwv2nLXBGZss');
+        });
+
+        it('should generate UBX address', async () => {
+            const mnemonic = 'tick tack toe';
+            const path = "m/16/56'/0";
+            const keyPair = keyPairFromMnemonicAndPath(mnemonic, path);
+            keyPair.compressed=true;
+
+            assert.strictEqual(keyPair.privateKey.toString('hex'),
+                '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
+            );
+            assert.equal(ubxAddressFromPublicKey(keyPair.publicKey), '6266b758937bb78e396118e314e3f300a271096a');
         });
     });
 

@@ -1,6 +1,5 @@
 const readline = require('readline');
 const crypto = require('crypto');
-
 const bip39 = require('bip39');
 const bip32 = require('bip32');
 const sha3 = require('js-sha3');
@@ -23,13 +22,16 @@ module.exports = {
     wifFromPk,
     keyPairFromMnemonicAndPath,
     readPath,
+    readBatchSize,
     formVariants,
     arrWithoutElement,
     hash160,
     sha256,
 
     keyPairFromPrivate,
-    getPublic
+    getPublic,
+
+    ubxAddressFromPublicKey
 };
 
 function questionAsync(prompt) {
@@ -52,6 +54,16 @@ function keyPairFromMnemonicAndPath(mnemonic, path) {
     const keyPair = bip32Root.derivePath(path);
     keyPair.compressed = false;
     return keyPair;
+}
+
+/**
+ * Read number of wallets to generate (we'll use it to scan for funds)
+ *
+ * @returns {Promise<string>}
+ */
+async function readBatchSize() {
+    let resp = await questionAsync(`Enter number of wallets you want to derive (default 1):`);
+    return !resp.length || !parseInt(resp) ? 1 : parseInt(resp);
 }
 
 async function readPath() {
@@ -77,6 +89,12 @@ function btcAddressFromPublicKey(pubKey) {
     const mainnetHash = `00${hash}`;
     const checksum = sha256(sha256(`${mainnetHash}`)).substring(0, 8);
     return Base58.encode(Buffer.from(`${mainnetHash}${checksum}`, 'hex'));
+}
+
+function ubxAddressFromPublicKey(pubKey) {
+    const strPubKey=Buffer.isBuffer(pubKey) ? pubKey.toString('hex') : pubKey;
+    if(strPubKey.length >66) throw new Error('Pubkey should be compact!');
+    return hash160Sha(strPubKey);
 }
 
 function wifFromPk(privateKey) {
@@ -127,9 +145,9 @@ function hash160(buffer) {
     return ripemd160(sha256(buffer));
 }
 
-function ripemd160(buffer) {
-    buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'hex');
-    return createHash('rmd160').update(buffer).digest().toString('hex');
+function ripemd160(source, bUseString=false) {
+    source = bUseString || Buffer.isBuffer(source) ? source : Buffer.from(source, 'hex');
+    return createHash('rmd160').update(source).digest().toString('hex');
 }
 
 function sha256(buffer) {
@@ -143,4 +161,23 @@ function keyPairFromPrivate(privateKey, enc = 'hex') {
 
 function getPublic(keypair, compact = true, encoding = 'hex') {
     return keypair.getPublic(compact, encoding);
+}
+
+function sha3Hash(buffer, length = 256) {
+    switch (length) {
+        case 224:
+            return sha3.sha3_224(buffer);
+        case 256:
+            return sha3.sha3_256(buffer);
+        case 384:
+            return sha3.sha3_384(buffer);
+        case 512:
+            return sha3.sha3_512(buffer);
+        default:
+            return sha3.sha3_256(buffer);
+    }
+}
+
+function hash160Sha(buffer) {
+    return ripemd160(sha3Hash(buffer), true);
 }
