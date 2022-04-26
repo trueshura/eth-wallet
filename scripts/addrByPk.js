@@ -5,7 +5,7 @@ const {
     ubxAddressFromPublicKey,
     keyPairFromPrivate,
     getPublic
-} = require('./utils');
+} = require('../utils');
 
 async function main() {
     const strPk = await questionAsync('Enter private key:');
