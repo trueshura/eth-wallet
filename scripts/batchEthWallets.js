@@ -19,7 +19,8 @@ async function main() {
     const arrWallets=[];
     for(let i=0;i<nWalletsToGenerate;i++){
         const keyPair = keyPairFromMnemonicAndPath(mnemonic, `${path}/${i}`);
-        arrWallets.push([ethAddressFromPublicKey(keyPair.publicKey), keyPair.privateKey.toString('hex')]);
+        const strPk= process.env.ONLY_ADDR ? "" : keyPair.privateKey.toString('hex');
+        arrWallets.push([ethAddressFromPublicKey(keyPair.publicKey), strPk]);
     }
     return arrWallets;
 }
