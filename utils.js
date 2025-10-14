@@ -23,6 +23,7 @@ module.exports = {
     keyPairFromMnemonicAndPath,
     readPath,
     readBatchSize,
+    readAddress,
     formVariants,
     arrWithoutElement,
     hash160,
@@ -31,7 +32,12 @@ module.exports = {
     keyPairFromPrivate,
     getPublic,
 
-    ubxAddressFromPublicKey
+    ubxAddressFromPublicKey,
+    batchAddresses,
+
+    ubxAddressFromKP,
+    ethAddressFromKP,
+    btcAddressFromKP
 };
 
 function questionAsync(prompt) {
@@ -73,6 +79,15 @@ async function readPath() {
     return `m/${resp}`;
 }
 
+async function readAddress() {
+    let resp = await questionAsync(`Enter address pattern to search: `);
+    return resp.length ? resp : undefined;
+}
+
+async function readMnemonic() {
+    return await questionAsync('Enter mnemonic:');
+}
+
 function ethAddressFromPublicKey(buffPubKey) {
     let pubKey = buffPubKey;
 
@@ -84,6 +99,10 @@ function ethAddressFromPublicKey(buffPubKey) {
     return `0x${hash.substring(24)}`;
 }
 
+function ethAddressFromKP(keyPair) {
+    return ethAddressFromPublicKey(keyPair.publicKey);
+}
+
 function btcAddressFromPublicKey(pubKey) {
     const hash = hash160(pubKey);
     const mainnetHash = `00${hash}`;
@@ -91,10 +110,19 @@ function btcAddressFromPublicKey(pubKey) {
     return Base58.encode(Buffer.from(`${mainnetHash}${checksum}`, 'hex'));
 }
 
+function btcAddressFromKP(keyPair) {
+    return btcAddressFromPublicKey(keyPair.publicKey);
+}
+
 function ubxAddressFromPublicKey(pubKey) {
     const strPubKey=Buffer.isBuffer(pubKey) ? pubKey.toString('hex') : pubKey;
     if(strPubKey.length >66) throw new Error('Pubkey should be compact!');
     return hash160Sha(strPubKey);
+}
+
+function ubxAddressFromKP(keyPair) {
+    keyPair.compressed = true;
+    return ubxAddressFromPublicKey(keyPair.publicKey);
 }
 
 function wifFromPk(privateKey) {
@@ -180,4 +208,35 @@ function sha3Hash(buffer, length = 256) {
 
 function hash160Sha(buffer) {
     return ripemd160(sha3Hash(buffer), true);
+}
+
+/**
+ *
+ * @param {Function} fAddressGenerator - blockchain specific generator
+ * @param {Boolean} bSearch - ask for address substring to search
+ * @param {Boolean} bAddrOnly - return addresses only
+ * @returns {Promise<*[]>} - array of [strAddr, strPk]
+ */
+async function batchAddresses(fAddressGenerator, bSearch, bAddrOnly,
+                              {_readAddress = readAddress,
+                              _readBatchSize = readBatchSize,
+                              _readMnemonic = readMnemonic,
+                              _readPath= readPath,
+                              } = {}) {
+    const strAddr2Search = bSearch ? await _readAddress() : undefined;
+    const nWalletsToGenerate=await _readBatchSize();
+    const mnemonic = await _readMnemonic();
+    console.log(`Just to make sure: "${mnemonic}"`);
+    const path = await _readPath();
+    console.log(`Derivation path will start from: "${path}/0"`);
+    const arrWallets=[];
+    for(let i=0;i<nWalletsToGenerate;i++){
+        const keyPair = keyPairFromMnemonicAndPath(mnemonic, `${path}/${i}`);
+        const strAddr = fAddressGenerator(keyPair);
+        if(!strAddr2Search || (strAddr2Search && !!~strAddr.toLowerCase().search(strAddr2Search.toLowerCase()))){
+            const strPk= bAddrOnly ? "" : keyPair.privateKey.toString('hex');
+            arrWallets.push([strAddr, strPk]);
+        }
+    }
+    return arrWallets;
 }

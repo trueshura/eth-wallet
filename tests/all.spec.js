@@ -2,7 +2,11 @@ const {describe, it} = require('mocha');
 const {assert} = require('chai');
 const EC = require('elliptic').ec;
 const {keyPairFromMnemonicAndPath, ethAddressFromPublicKey, btcAddressFromPublicKey, hash160, wifFromPk,
-    ubxAddressFromPublicKey
+    ubxAddressFromPublicKey,
+    batchAddresses,
+    ubxAddressFromKP,
+    ethAddressFromKP,
+    btcAddressFromKP
 } = require(
     '../utils');
 const recover = require('../recover');
@@ -69,6 +73,62 @@ describe('Tests', () => {
         assert.equal(ethAddressFromPublicKey(keyPair.publicKey), '0xab98b0bf2c8d453e7a4880ab41af0e9095085641');
     });
 
+    it('should generate UBX address', async () => {
+        const mnemonic = 'tick tack toe';
+        const path = "m/16/56'/0";
+        const keyPair = keyPairFromMnemonicAndPath(mnemonic, path);
+        keyPair.compressed=true;
+
+        assert.strictEqual(keyPair.privateKey.toString('hex'),
+            '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
+        );
+        assert.equal(ubxAddressFromPublicKey(keyPair.publicKey), '6266b758937bb78e396118e314e3f300a271096a');
+    });
+
+    describe('Batch address generation', async () => {
+        it('should generate batch ETH addresses', async () => {
+            const arrResults = await batchAddresses(ethAddressFromKP, true, false,
+                {
+                    _readAddress: async () => "77C8",
+                    _readPath: async () => "0/0/0",
+                    _readBatchSize: async () => 3,
+                    _readMnemonic: async () => "1 2 3 4"
+                });
+
+            assert.equal(arrResults.length, 1);
+            assert.equal(arrResults[0][0], "0x77c8cf2b3a917b31e602c3e718486e988481e168");
+            // arrResults.forEach(([strAddr, strPk]) => console.log(`${strAddr} => ${strPk}`));
+        });
+
+        it('should generate batch UBX addresses', async () => {
+            const arrResults = await batchAddresses(ubxAddressFromKP, true, false,
+                {
+                    _readAddress: async () => "Da73",
+                    _readPath: async () => "0/0/0",
+                    _readBatchSize: async () => 3,
+                    _readMnemonic: async () => "1 2 3 4"
+                });
+
+            assert.equal(arrResults.length, 1);
+            assert.equal(arrResults[0][0], "da7388219a4a92d7f0f2be3ef57547b35b50165b");
+            // arrResults.forEach(([strAddr, strPk]) => console.log(`${strAddr} => ${strPk}`));
+        });
+
+        it('should generate batch BTC addresses', async () => {
+            const arrResults = await batchAddresses(btcAddressFromKP, true, false,
+                {
+                    _readAddress: async () => "1ej2",
+                    _readPath: async () => "0/0/0",
+                    _readBatchSize: async () => 3,
+                    _readMnemonic: async () => "1 2 3 4"
+                });
+
+            assert.equal(arrResults.length, 1);
+            assert.equal(arrResults[0][0], "1Ej2wgG8MoTWX4yJ9tYSGu6UeTFiRwi1tr");
+            // arrResults.forEach(([strAddr, strPk]) => console.log(`${strAddr} => ${strPk}`));
+        });
+    });
+
     describe('Bitcoin P2PKH addresses', async () => {
         it('should create hash160', async () => {
             const strPubKey = '02b4632d08485ff1df2db55b9dafd23347d1c47a457072a1e87be26896549a8737';
@@ -100,18 +160,6 @@ describe('Tests', () => {
                 '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
             );
             assert.equal(btcAddressFromPublicKey(keyPair.publicKey), '1D4FJkUMzhR1JY8W6RAXRpkwv2nLXBGZss');
-        });
-
-        it('should generate UBX address', async () => {
-            const mnemonic = 'tick tack toe';
-            const path = "m/16/56'/0";
-            const keyPair = keyPairFromMnemonicAndPath(mnemonic, path);
-            keyPair.compressed=true;
-
-            assert.strictEqual(keyPair.privateKey.toString('hex'),
-                '3e8f1d46152b21b4dcd7b5e413eb211527d8bb5b2fe4f0a7a282d7ca5df53e76'
-            );
-            assert.equal(ubxAddressFromPublicKey(keyPair.publicKey), '6266b758937bb78e396118e314e3f300a271096a');
         });
     });
 
